@@ -27,11 +27,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (!wasiFileDescriptorAdd(-1, "/tmp", NULL)) {
-        fprintf(stderr, "failed to add preopen\n");
-        return 1;
-    }
-
     {
         celqInstance instance;
         celqInstantiate(&instance, NULL);
