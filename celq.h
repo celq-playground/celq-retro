@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "w2c2_base.h"
+#include "vendor/w2c2_base.h"
 
 typedef struct celqInstance {
 wasmModuleInstance common;
