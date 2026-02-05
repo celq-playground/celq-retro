@@ -18,6 +18,12 @@ wasiMemory(
     return celq_memory((celqInstance*)instance);
 }
 
+#if defined(__MSL__) && defined(macintosh)
+char** environ = NULL;
+#else
+extern char** environ;
+#endif
+
 /* Main */
 
 int main(int argc, char* argv[]) {
