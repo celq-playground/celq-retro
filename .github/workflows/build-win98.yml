@@ -19,7 +19,10 @@ jobs:
 
       - name: Compile for Windows 98
         run: |
-          wcl386 -l=nt -os -i=./vendor main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
+          wcl386 -l=nt -os -i=./vendor \
+          -d__inline__= \
+          -d_TIMESPEC_DEFINED \
+          main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

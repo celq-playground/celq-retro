@@ -10,7 +10,10 @@ gcc -Os -std=gnu90 -D_GNU_SOURCE -DHAS_UNISTD=1 -DHAS_TIMESPEC=1 -DHAS_SYSUIO=1 
 
 For Windows 98, to compile it with Open WATCOM:
 ```bash
-wcl386 -l=nt -os -i=./vendor main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
+wcl386 -l=nt -os -i=./vendor \
+    -d__inline__= \
+    -d_TIMESPEC_DEFINED \
+    main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 ```
 
 ## How was this made
