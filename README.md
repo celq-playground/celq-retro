@@ -2,10 +2,15 @@
 
 celq for retrocomputing via [w2c2](https://github.com/turbolent/w2c2).
 
-To compile this code, run:
+To compile this code on modern systems, run:
 
 ```bash
 gcc -Os -std=gnu90 -D_GNU_SOURCE -DHAS_UNISTD=1 -DHAS_TIMESPEC=1 -DHAS_SYSUIO=1 -I./vendor main.c celq.c vendor/wasi.c -o celq -lm
+```
+
+For Windows 98, to compile it with Open WATCOM:
+```bash
+wcl386 -l=nt -os -i=./vendor main.c celq.c vendor/wasi.c -fe=celq.exe
 ```
 
 ## How was this made
