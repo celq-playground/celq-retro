@@ -15,7 +15,7 @@ First, clone [celq](https://github.com/IvanIsCoding/celq) and build `celq.wasm` 
 ```bash
 cargo build \
 	--no-default-features \
-    --features "from-toml,from-yaml,greppable" \
+    --features "from-toml,from-yaml,from-xml,greppable" \
     --release \
     --target wasm32-wasip1
 ```
