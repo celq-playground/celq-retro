@@ -12,7 +12,8 @@ For Windows 98, to compile it with Open WATCOM:
 ```bash
 wcl386 -l=nt -os -i=./vendor \
     -d__inline__= \
-    -d_TIMESPEC_DEFINED \
+    -d_HAS_TIMESPEC \
+    -d_WIN32 \
     main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 ```
 
