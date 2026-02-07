@@ -247,10 +247,15 @@ typedef U32 WasmPtr;
 #define _HUGE_ENUF  1e+300  /* _HUGE_ENUF*_HUGE_ENUF must overflow */
 #endif
 
+#ifndef INFINITY
 #define INFINITY   ((float)(_HUGE_ENUF * _HUGE_ENUF))
+#endif
+
 #define HUGE_VALF  ((float)INFINITY)
 #define HUGE_VALL  ((long double)INFINITY)
+#ifndef NAN
 #define NAN        ((float)(INFINITY * 0.0F))
+#endif
 #endif
 
 #ifndef INFINITY
