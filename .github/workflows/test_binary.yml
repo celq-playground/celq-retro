@@ -1,11 +1,13 @@
 name: Test Windows 98 Binary Compatibility
 
 on:
+  push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  test-win98-binary:
-    name: Test Windows 98 Binary
+  test-win98-binary-windows:
+    name: Test Windows 98 Binary on Windows
     runs-on: windows-latest
     defaults:
       run:
@@ -39,3 +41,66 @@ jobs:
           
           # Run the smoke test script with the Win98 binary
           sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq.exe
+
+  test-win98-binary-wine:
+    name: Test Windows 98 Binary via Wine on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo mkdir -pm755 /etc/apt/keyrings
+          sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+          sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/$(lsb_release -sc)/winehq-$(lsb_release -sc).sources
+          sudo apt update
+          sudo apt install -y --install-recommends winehq-stable
+          
+      - name: Verify Wine installation
+        run: |
+          wine --version
+          wineboot --init
+          
+      - name: Download Windows 98 binary
+        run: |
+          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-win98.zip
+          
+      - name: Extract celq.exe
+        run: |
+          unzip celq-win98.zip
+          chmod +x celq.exe
+          
+      - name: Test binary directly with Wine
+        run: |
+          echo "Testing if binary runs through Wine..."
+          wine celq.exe --version || echo "Version check failed or not supported"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Create Wine wrapper script
+        run: |
+          mkdir -p test-bin
+          cat > test-bin/celq << 'EOF'
+          #!/bin/bash
+          # Wine wrapper for celq.exe
+          # This script runs celq.exe through Wine and passes all arguments
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          exec wine "$SCRIPT_DIR/celq.exe" "$@"
+          EOF
+          chmod +x test-bin/celq
+          
+          # Copy the actual exe to the same directory
+          cp celq.exe test-bin/celq.exe
+          
+      - name: Test wrapper script
+        run: |
+          echo "Testing wrapper script..."
+          ./test-bin/celq --version || echo "Version check via wrapper failed"
+          
+      - name: Run smoke test with Wine wrapper
+        run: |
+          # Run the smoke test script with our Wine wrapper
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
