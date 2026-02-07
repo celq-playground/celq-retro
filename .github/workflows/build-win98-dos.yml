@@ -1,0 +1,37 @@
+name: Build for Windows 98 (DOS)
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install DJGPP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget bzip2
+          cd /tmp
+          wget https://github.com/andrewwutw/build-djgpp/releases/download/v3.4/djgpp-linux64-gcc1220.tar.bz2
+          sudo tar xjf djgpp-linux64-gcc1220.tar.bz2 -C /usr/local
+          echo "/usr/local/djgpp/bin" >> $GITHUB_PATH
+      
+      - name: Compile for DOS/Win98
+        run: |
+          export PATH="/usr/local/djgpp/bin:$PATH"
+          i586-pc-msdosdjgpp-gcc \
+            -o celq.exe \
+            -O2 \
+            -I./vendor \
+            -D_WIN32 \
+            -DHAS_UNISTD=0 \
+            -DHAS_TIMESPEC=1 \
+            main.c celq.c vendor/wasi.c vendor/win32.c
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-djgpp
+          path: celq.exe
