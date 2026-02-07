@@ -25,7 +25,7 @@ jobs:
             -o celq.exe \
             -O2 \
             -I./vendor \
-            -DHAS_UNISTD=0 \
+            -DHAS_UNISTD=1 \
             -DHAS_TIMESPEC=0 \
             main.c celq.c vendor/wasi.c
       
