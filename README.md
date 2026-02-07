@@ -8,7 +8,18 @@ To compile this code on modern systems, run:
 gcc -Os -std=gnu90 -D_GNU_SOURCE -DHAS_UNISTD=1 -DHAS_TIMESPEC=1 -DHAS_SYSUIO=1 -I./vendor main.c celq.c vendor/wasi.c -o celq -lm
 ```
 
-For Windows 98, to compile it with Open WATCOM:
+For Windows 98, to compile it with [DJGPP](https://en.wikipedia.org/wiki/DJGPP):
+```bash
+i386-pc-msdosdjgpp-gcc \
+    -o celq.exe \
+    -O2 \
+    -I./vendor \
+    -DHAS_UNISTD=1 \
+    -DHAS_TIMESPEC=0 \
+    main.c celq.c vendor/wasi.c
+```
+
+For Windows 98, to compile it with Open [WATCOM](https://en.wikipedia.org/wiki/Watcom_C/C%2B%2B):
 ```bash
 wcl386 -l=nt -os -i=./vendor \
 	-d__inline__= \
