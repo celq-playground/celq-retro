@@ -590,6 +590,7 @@ wasiFileDescriptorGet(
     return true;
 }
 
+#ifndef __WATCOMC__
 static
 bool
 WARN_UNUSED_RESULT
@@ -601,6 +602,7 @@ wasiDirectorySet(
     wasi.fds.fds[wasiFD].dir = nativeDir;
     return true;
 }
+#endif /* __WATCOMC__ */
 
 #ifndef __WATCOMC__
 bool

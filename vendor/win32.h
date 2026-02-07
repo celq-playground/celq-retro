@@ -64,7 +64,9 @@ int closedir(DIR*);
 
 struct DIR {
     char* dirname;
+    #ifndef __WATCOMC__
     struct dirent ret;
+    #endif /* __WATCOMC__ */
     HANDLE handle;
 };
 
