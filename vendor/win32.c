@@ -181,6 +181,7 @@ setErrno(
     errno = EINVAL;
 }
 
+#ifndef __WATCOMC__
 /*
  * Taken from PostgreSQL.
  * Portions Copyright (c) 1996-2022, PostgreSQL Global Development Group
@@ -308,5 +309,6 @@ closedir(
 
     return ret;
 }
+#endif /* __WATCOMC__ */
 
 #endif /* _WIN32 */

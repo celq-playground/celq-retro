@@ -29,6 +29,7 @@ extern "C" {
 #define IO_REPARSE_TAG_MOUNT_POINT 0xA0000003l
 #endif
 
+#ifndef __WATCOMC__
 struct dirent {
     long d_ino;
     unsigned short d_reclen;
@@ -36,12 +37,19 @@ struct dirent {
     unsigned short d_namlen;
     char d_name[MAX_PATH];
 };
+#endif /* __WATCOMC__ */
+
+#ifdef __WATCOMC__
+typedef struct dirent dirent;
+#endif
 
 typedef struct DIR DIR;
 
+#ifndef __WATCOMC__
 DIR* opendir(const char*);
 struct dirent* readdir(DIR*);
 int closedir(DIR*);
+#endif /* __WATCOMC__ */
 
 /* File types for 'd_type' */
 #define DT_UNKNOWN  0

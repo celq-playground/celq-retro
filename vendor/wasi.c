@@ -602,6 +602,7 @@ wasiDirectorySet(
     return true;
 }
 
+#ifndef __WATCOMC__
 bool
 WARN_UNUSED_RESULT
 wasiFileDescriptorClose(
@@ -625,6 +626,7 @@ wasiFileDescriptorClose(
 
     return true;
 }
+#endif /* __WATCOMC__ */
 
 bool
 WARN_UNUSED_RESULT
@@ -1480,6 +1482,7 @@ wasiFileTypeFromMode(
 
 #define WASI_DIRENT_SIZE 24
 
+#ifndef __WATCOMC__
 static
 W2C2_INLINE
 U32
@@ -1703,7 +1706,9 @@ wasiFDReaddir(
 
     return WASI_ERRNO_SUCCESS;
 }
+#endif /* __WATCOMC__ */
 
+#ifndef __WATCOMC__
 WASI_IMPORT(U32, fd_readdir, (
     void* instance,
     U32 wasiDirFD,
@@ -1721,7 +1726,24 @@ WASI_IMPORT(U32, fd_readdir, (
         bufferUsedPointer
     );
 })
+#endif /* __WATCOMC__ */
 
+#ifdef __WATCOMC__
+WASI_IMPORT(U32, fd_readdir, (
+    void* instance,
+    U32 wasiDirFD,
+    U32 bufferPointer,
+    U32 bufferLength,
+    U64 cookie,
+    U32 bufferUsedPointer
+), {
+    /* TODO: */
+    WASI_TRACE(("fd_readdir: unimplemented function"));
+    return WASI_ERRNO_NOSYS;
+})
+#endif /* __WATCOMC__ */
+
+#ifndef __WATCOMC__
 WASI_IMPORT(U32, fd_close, (
     void* UNUSED(instance),
     U32 wasiFD
@@ -1739,6 +1761,18 @@ WASI_IMPORT(U32, fd_close, (
     }
     return WASI_ERRNO_SUCCESS;
 })
+#endif /* __WATCOMC__ */
+
+#ifdef __WATCOMC__
+WASI_IMPORT(U32, fd_close, (
+    void* UNUSED(instance),
+    U32 wasiFD
+), {
+   /* TODO: */
+    WASI_TRACE(("fd_close: unimplemented function"));
+    return WASI_ERRNO_NOSYS;
+})
+#endif /* __WATCOMC__ */
 
 #ifndef NSEC_PER_SEC
 #define NSEC_PER_SEC W2C2_LL(1000000000)
