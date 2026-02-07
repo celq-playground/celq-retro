@@ -10,7 +10,7 @@ gcc -Os -std=gnu90 -D_GNU_SOURCE -DHAS_UNISTD=1 -DHAS_TIMESPEC=1 -DHAS_SYSUIO=1 
 
 For Windows 98, to compile it with [DJGPP](https://en.wikipedia.org/wiki/DJGPP):
 ```bash
-i386-pc-msdosdjgpp-gcc \
+i586-pc-msdosdjgpp-gcc \
     -o celq.exe \
     -O2 \
     -I./vendor \
