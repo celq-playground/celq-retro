@@ -25,10 +25,9 @@ jobs:
             -o celq.exe \
             -O2 \
             -I./vendor \
-            -D_WIN32 \
             -DHAS_UNISTD=0 \
             -DHAS_TIMESPEC=1 \
-            main.c celq.c vendor/wasi.c vendor/win32.c
+            main.c celq.c vendor/wasi.c
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
