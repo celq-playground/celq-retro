@@ -23,7 +23,9 @@ jobs:
           -d__inline__= \
           -d_WIN32 \
           -d_X86_ \
-          -d_MSC_VER=1200 \
+          -d_MSC_VER=1000 \
+          -dHAS_UNISTD=0 \
+          -dHAS_TIMESPEC=1 \
           -bm \
           main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 
