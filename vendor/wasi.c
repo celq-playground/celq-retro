@@ -84,31 +84,94 @@ struct timespec {
 
 #define mode_t unsigned short
 
+#ifndef S_IFMT
 #define S_IFMT  _S_IFMT
+#endif
+#ifndef S_IFDIR
 #define S_IFDIR _S_IFDIR
+#endif
+#ifndef S_IFCHR
 #define S_IFCHR _S_IFCHR
+#endif
+#ifndef S_IFREG
 #define S_IFREG _S_IFREG
+#endif
 
+/* File Access Modes */
+#ifndef O_RDONLY
 #define O_RDONLY _O_RDONLY
+#endif
+#ifndef O_WRONLY
 #define O_WRONLY _O_WRONLY
+#endif
+#ifndef O_RDWR
 #define O_RDWR   _O_RDWR
+#endif
+#ifndef O_APPEND
 #define O_APPEND _O_APPEND
+#endif
+#ifndef O_CREAT
 #define O_CREAT  _O_CREAT
+#endif
+#ifndef O_TRUNC
 #define O_TRUNC  _O_TRUNC
+#endif
+#ifndef O_EXCL
 #define O_EXCL   _O_EXCL
+#endif
 
-#define open      _open
-#define read      _read
-#define write     _write
-#define close     _close
-#define mkdir     _mkdir
-#define rmdir     _rmdir
-#define unlink    _unlink
-#define stat      _stat
-#define fstat     _fstat
-#define lseek     _lseek
-#define isatty    _isatty
+#ifndef O_EXCL
+#define O_EXCL _O_EXCL
+#endif
+
+#ifndef open
+#define open _open
+#endif
+
+#ifndef read
+#define read _read
+#endif
+
+#ifndef write
+#define write _write
+#endif
+
+#ifndef close
+#define close _close
+#endif
+
+#ifndef mkdir
+#define mkdir _mkdir
+#endif
+
+#ifndef rmdir
+#define rmdir _rmdir
+#endif
+
+#ifndef unlink
+#define unlink _unlink
+#endif
+
+#ifndef stat
+#define stat _stat
+#endif
+
+#ifndef fstat
+#define fstat _fstat
+#endif
+
+#ifndef lseek
+#define lseek _lseek
+#endif
+
+#ifndef isatty
+#define isatty _isatty
+#endif
+
+#ifndef ftruncate
 #define ftruncate _chsize
+#endif
+
 
 /* TODO: could be redirected, use _fileno */
 #define STDIN_FILENO  0
