@@ -26,7 +26,7 @@ jobs:
             -O2 \
             -I./vendor \
             -DHAS_UNISTD=0 \
-            -DHAS_TIMESPEC=1 \
+            -DHAS_TIMESPEC=0 \
             main.c celq.c vendor/wasi.c
       
       - name: Upload Artifact
