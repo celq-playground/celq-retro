@@ -29,8 +29,17 @@ jobs:
             -DHAS_TIMESPEC=0 \
             main.c celq.c vendor/wasi.c
       
+      - name: Create ISO
+        run: |
+          sudo apt-get install -y genisoimage
+          mkdir -p iso_contents
+          cp celq.exe iso_contents/
+          genisoimage -o celq.iso -V "CELQ" -r -J iso_contents
+      
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: celq-djgpp
-          path: celq.exe
+          path: |
+            celq.exe
+            celq.iso
