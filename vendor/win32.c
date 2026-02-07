@@ -317,132 +317,27 @@ DIR *
 opendir(
     const char* dirname
 ) {
-    DWORD attr;
-    DIR *d;
-    
-    /* Make sure it is a directory */
-    attr = GetFileAttributes(dirname);
-    if (attr == INVALID_FILE_ATTRIBUTES) {
-        errno = ENOENT;
-        return NULL;
-    }
-    if ((attr & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) {
-        errno = ENOTDIR;
-        return NULL;
-    }
-    
-    d = malloc(sizeof(DIR));
-    if (!d) {
-        errno = ENOMEM;
-        return NULL;
-    }
-    
-    d->dirname = malloc(strlen(dirname) + 4);
-    if (!d->dirname) {
-        errno = ENOMEM;
-        free(d);
-        return NULL;
-    }
-    
-    strcpy(d->dirname, dirname);
-    if (d->dirname[strlen(d->dirname) - 1] != '/' &&
-        d->dirname[strlen(d->dirname) - 1] != '\\') {
-        strcat(d->dirname, "\\");
-    }
-    strcat(d->dirname, "*");
-    
-    d->handle = INVALID_HANDLE_VALUE;
-    d->ret.d_first = 1;
-    
-    return d;
+    fprintf(stderr, "FATAL: opendir() not implemented for OpenWATCOM\n");
+    abort();
+    return NULL;
 }
 
 struct dirent*
 readdir(
     DIR* d
 ) {
-    WIN32_FIND_DATA fd;
-    
-    if (d->ret.d_first) {
-        d->handle = FindFirstFile(d->dirname, &fd);
-        if (d->handle == INVALID_HANDLE_VALUE) {
-            DWORD e = GetLastError();
-            if (e == ERROR_FILE_NOT_FOUND) {
-                errno = 0;
-            } else {
-                errno = e;
-            }
-            return NULL;
-        }
-        d->ret.d_first = 0;
-    } else {
-        if (!FindNextFile(d->handle, &fd)) {
-            DWORD e = GetLastError();
-            if (e == ERROR_NO_MORE_FILES) {
-                errno = 0;
-            } else {
-                errno = e;
-            }
-            return NULL;
-        }
-    }
-    
-    /* Copy filename (both are limited by NAME_MAX) */
-    strncpy(d->ret.d_name, fd.cFileName, NAME_MAX);
-    d->ret.d_name[NAME_MAX] = '\0';
-    
-    /* Map Windows attributes to DOS-style attributes */
-    d->ret.d_attr = 0;
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-        d->ret.d_attr |= _A_RDONLY;
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-        d->ret.d_attr |= _A_HIDDEN;
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
-        d->ret.d_attr |= _A_SYSTEM;
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        d->ret.d_attr |= _A_SUBDIR;
-    if (fd.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
-        d->ret.d_attr |= _A_ARCH;
-    
-    /* Convert FILETIME to DOS date/time */
-    {
-        FILETIME localft;
-        SYSTEMTIME st;
-        FileTimeToLocalFileTime(&fd.ftLastWriteTime, &localft);
-        FileTimeToSystemTime(&localft, &st);
-        
-        d->ret.d_time = ((st.wHour & 0x1F) << 11) |
-                        ((st.wMinute & 0x3F) << 5) |
-                        ((st.wSecond / 2) & 0x1F);
-        
-        d->ret.d_date = (((st.wYear - 1980) & 0x7F) << 9) |
-                        ((st.wMonth & 0x0F) << 5) |
-                        (st.wDay & 0x1F);
-    }
-    
-    /* Set file size */
-    d->ret.d_size = fd.nFileSizeLow;  /* Ignore high DWORD for compatibility */
-    
-    /* Set inode (just use low part of file index if available, or 0) */
-    d->ret.d_ino = 0;
-    
-    return &d->ret;
+    fprintf(stderr, "FATAL: readdir() not implemented for OpenWATCOM\n");
+    abort();
+    return NULL;
 }
 
 int
 closedir(
     DIR* d
 ) {
-    int ret = 0;
-    
-    if (d->handle != INVALID_HANDLE_VALUE) {
-        ret = !FindClose(d->handle);
-    }
-    
-    free(d->dirname);
-    free(d);
-    
-    return ret;
+    fprintf(stderr, "FATAL: closedir() not implemented for OpenWATCOM\n");
+    abort();
+    return -1;
 }
 
 #endif /* __WATCOMC__ */
