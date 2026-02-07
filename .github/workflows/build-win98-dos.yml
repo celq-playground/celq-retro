@@ -21,7 +21,7 @@ jobs:
       - name: Compile for DOS/Win98
         run: |
           export PATH="/usr/local/djgpp/bin:$PATH"
-          i586-pc-msdosdjgpp-gcc \
+          i386-pc-msdosdjgpp-gcc \
             -o celq.exe \
             -O2 \
             -I./vendor \
