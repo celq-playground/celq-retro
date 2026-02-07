@@ -21,8 +21,10 @@ jobs:
         run: |
           wcl386 -l=nt -os -i=./vendor \
           -d__inline__= \
-          -d_HAS_TIMESPEC \
           -d_WIN32 \
+          -d_X86_ \
+          -d_MSC_VER=1200 \
+          -bm \
           main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 
       - name: Upload Artifact
