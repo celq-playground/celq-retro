@@ -23,7 +23,10 @@ typedef SSIZE_T ssize_t;
 typedef unsigned short mode_t;
 typedef long ssize_t;
 
+#ifndef __WATCOMC__
 #define dirent direct
+#endif /* __WATCOMC__ */
+
 #endif /* _NEXT_SOURCE */
 
 #include <time.h>

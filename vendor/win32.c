@@ -181,7 +181,6 @@ setErrno(
     errno = EINVAL;
 }
 
-#ifndef __WATCOMC__
 /*
  * Taken from PostgreSQL.
  * Portions Copyright (c) 1996-2022, PostgreSQL Global Development Group
@@ -309,38 +308,5 @@ closedir(
 
     return ret;
 }
-#endif
-
-#ifdef __WATCOMC__
-
-DIR *
-opendir(
-    const char* dirname
-) {
-    fprintf(stderr, "FATAL: opendir() not implemented for OpenWATCOM\n");
-    abort();
-    return NULL;
-}
-
-struct dirent*
-readdir(
-    DIR* d
-) {
-    fprintf(stderr, "FATAL: readdir() not implemented for OpenWATCOM\n");
-    abort();
-    return NULL;
-}
-
-int
-closedir(
-    DIR* d
-) {
-    fprintf(stderr, "FATAL: closedir() not implemented for OpenWATCOM\n");
-    abort();
-    return -1;
-}
-
-#endif /* __WATCOMC__ */
-
 
 #endif /* _WIN32 */
