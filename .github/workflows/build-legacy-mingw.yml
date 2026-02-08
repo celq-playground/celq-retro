@@ -31,11 +31,10 @@ jobs:
           RUN chroot /squeeze apt-get update && \
               chroot /squeeze apt-get install -y --force-yes mingw32 build-essential
           
-          WORKDIR /build
+          # Create build directory inside chroot
+          RUN mkdir -p /squeeze/build
           
-          # Set entrypoint to use chroot
-          ENTRYPOINT ["/usr/sbin/chroot", "/squeeze"]
-          CMD ["/bin/bash"]
+          WORKDIR /squeeze/build
           EOF
           
           # Build the Docker image
@@ -44,10 +43,10 @@ jobs:
       - name: Compile in Debian Squeeze Environment
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/build \
-            -w /build \
+            -v ${{ github.workspace }}:/squeeze/build \
             debian-squeeze-mingw \
-            /bin/bash -c "
+            /usr/sbin/chroot /squeeze /bin/bash -c "
+              cd /build
               i586-mingw32msvc-gcc \
                 -o celq.exe \
                 -O2 \
