@@ -1,0 +1,47 @@
+name: Build for Windows (MinGW)
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install MinGW
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 genisoimage
+      
+      - name: Compile for Windows (98 compatible)
+        run: |
+          # Target Windows 98 / NT 4.0 and later
+          i686-w64-mingw32-gcc \
+            -o celq.exe \
+            -O2 \
+            -I./vendor \
+            -DHAS_UNISTD=0 \
+            -DHAS_TIMESPEC=0 \
+            -D_WIN32_WINNT=0x0400 \
+            -DWINVER=0x0400 \
+            -static \
+            -static-libgcc \
+            -s \
+            main.c celq.c vendor/wasi.c \
+            -lkernel32 -luser32
+      
+      - name: Create ISO
+        run: |
+          mkdir -p iso_contents
+          cp celq.exe iso_contents/
+          echo "Copy celq.exe to your Windows 98/XP machine and run it" > iso_contents/README.txt
+          genisoimage -o celq.iso -V "CELQ" -r -J iso_contents
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-mingw-win98
+          path: |
+            celq.exe
+            celq.iso
