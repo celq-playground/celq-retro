@@ -3,54 +3,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows-legacy:
+  build-win98-etch:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build Debian Lenny Docker Image from Scratch
+      - name: Build Debian Etch Docker Image
         run: |
-          # Create a Dockerfile that builds Debian Lenny (5.0) from scratch
+          # We use debian:buster as a builder because it still has good tools
+          # but isn't so new that it breaks interacting with old archives.
           cat > Dockerfile << 'EOF'
-          FROM debian:bullseye
+          FROM debian:buster-slim
           
           # Install debootstrap
           RUN apt-get update && apt-get install -y debootstrap
           
-          # Create Debian Lenny rootfs
-          # We use --no-check-gpg because the release keys are long expired
-          RUN debootstrap --arch=amd64 --no-check-gpg --variant=minbase lenny /lenny http://archive.debian.org/debian/
+          # Create Debian Etch rootfs
+          # 1. We verify against nothing (--no-check-gpg) because keys are expired
+          # 2. We use archive.debian.org
+          RUN mkdir -p /etch
+          RUN debootstrap --arch=i386 --no-check-gpg --variant=minbase etch /etch http://archive.debian.org/debian/
           
-          # Configure the Lenny environment
-          # Note: We must point to archive.debian.org
-          RUN echo "deb http://archive.debian.org/debian/ lenny main contrib non-free" > /lenny/etc/apt/sources.list && \
-              echo 'Acquire::Check-Valid-Until "false";' > /lenny/etc/apt/apt.conf.d/99no-check-valid-until
+          # Configure Etch APT
+          # Etch was the last version to use the old sources.list layout mostly
+          RUN echo "deb http://archive.debian.org/debian/ etch main contrib non-free" > /etch/etc/apt/sources.list
           
-          # Install MinGW in the Lenny chroot
-          # Lenny uses --force-yes instead of modern --allow-unauthenticated flags
-          RUN chroot /lenny apt-get update && \
-              chroot /lenny apt-get install -y --force-yes mingw32 build-essential
+          # Force Apt to ignore expiry
+          RUN echo 'Acquire::Check-Valid-Until "false";' > /etch/etc/apt/apt.conf.d/99no-check-valid-until
           
-          # Create build directory
-          RUN mkdir -p /lenny/build
-          WORKDIR /lenny/build
+          # Install MinGW in the Etch chroot
+          # We use chroot to run the installation inside the Etch environment
+          # We set DEBIAN_FRONTEND=noninteractive to avoid curses errors in old bash
+          RUN chroot /etch apt-get update || true
+          RUN chroot /etch bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes mingw32 build-essential"
+          
+          # Create build dir
+          RUN mkdir -p /etch/build
+          WORKDIR /etch/build
           EOF
           
-          # Build the Docker image
-          docker build -t debian-lenny-mingw .
+          docker build -t debian-etch-mingw .
       
-      - name: Compile in Debian Lenny Environment
+      - name: Compile with MinGW GCC 3.4.5
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/lenny/build \
-            debian-lenny-mingw \
-            /usr/sbin/chroot /lenny /bin/bash -c "
+            -v ${{ github.workspace }}:/etch/build \
+            debian-etch-mingw \
+            /usr/sbin/chroot /etch /bin/bash -c "
               cd /build
               
-              # Check compiler version for verification in logs
-              i586-mingw32msvc-gcc --version
+              echo 'Checking Compiler Version:'
+              i586-mingw32msvc-gcc -v
+              
+              echo 'Starting Build...'
+              # Note: In GCC 3.4, some modern flags might not exist.
+              # We use -march=i586 (Pentium) to be safe for Win98
               
               i586-mingw32msvc-gcc \
                 -o celq.exe \
@@ -71,39 +80,12 @@ jobs:
                 main.c celq.c vendor/wasi.c \
                 -lkernel32 -luser32
               
-              echo 'Compilation complete!'
-              ls -lh celq.exe
+              echo 'Build Complete.'
+              ls -l celq.exe
             "
-      
+            
       - name: Upload Windows Binary
         uses: actions/upload-artifact@v4
         with:
-          name: celq-win98-legacy
+          name: celq-win98-etch
           path: celq.exe
-
-  create-iso:
-    runs-on: ubuntu-latest
-    needs: build-windows-legacy
-    steps:
-      - name: Download Windows Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: celq-win98-legacy
-      
-      - name: Install genisoimage
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y genisoimage
-      
-      - name: Create ISO
-        run: |
-          mkdir -p iso_contents
-          cp celq.exe iso_contents/
-          echo "Copy celq.exe to your Windows 98/XP machine and run it" > iso_contents/README.txt
-          genisoimage -o celq.iso -V "CELQ_LEGACY" -r -J iso_contents
-      
-      - name: Upload ISO Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: celq-iso
-          path: celq.iso
