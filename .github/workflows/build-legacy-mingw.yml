@@ -74,7 +74,7 @@ jobs:
                 -Wl,--section-alignment,4096 \
                 -s \
                 main.c celq.c vendor/wasi.c \
-                -lkernel32 -luser32
+                -lkernel32 -luser32 -ladvapi32
               
               echo 'Build Complete.'
               ls -l celq.exe
