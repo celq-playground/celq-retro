@@ -10,35 +10,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build in Debian Squeeze Docker Container
+      - name: Build in Debian Jessie Docker Container
         run: |
-          # Create Dockerfile for Debian Squeeze
+          # Create Dockerfile for Debian Jessie
           cat > Dockerfile << 'EOF'
-          FROM debian:squeeze
+          FROM debian:jessie
           
           # Update sources.list to point to archive
-          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /etc/apt/sources.list && \
-              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /etc/apt/sources.list
+          RUN echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" > /etc/apt/sources.list && \
+              echo "deb http://archive.debian.org/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
           
           # Disable release file checks for archived repos
           RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
           
-          # Install MinGW cross-compiler
+          # Install MinGW cross-compiler (GCC 4.9 era)
           RUN apt-get update && \
-              apt-get install -y mingw32 build-essential
+              apt-get install -y gcc-mingw-w64-i686 g++-mingw-w64-i686 build-essential
           
           WORKDIR /build
           EOF
           
           # Build the Docker image
-          docker build -t debian-squeeze-mingw .
+          docker build -t debian-jessie-mingw .
           
           # Run compilation inside the container
           docker run --rm \
             -v ${{ github.workspace }}:/build \
-            debian-squeeze-mingw \
+            debian-jessie-mingw \
             /bin/bash -c "
-              i586-mingw32msvc-gcc \
+              i686-w64-mingw32-gcc \
                 -o celq.exe \
                 -O2 \
                 -I./vendor \
