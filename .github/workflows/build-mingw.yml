@@ -25,6 +25,7 @@ jobs:
             -DHAS_TIMESPEC=1 \
             -D_WIN32_WINNT=0x0400 \
             -DWINVER=0x0400 \
+            -DWASI_FALLBACK_TIMERS_ENABLED=1 \
             -static \
             -static-libgcc \
             -s \
