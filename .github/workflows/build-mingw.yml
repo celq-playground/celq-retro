@@ -22,7 +22,7 @@ jobs:
             -O2 \
             -I./vendor \
             -DHAS_UNISTD=0 \
-            -DHAS_TIMESPEC=0 \
+            -DHAS_TIMESPEC=1 \
             -D_WIN32_WINNT=0x0400 \
             -DWINVER=0x0400 \
             -static \
