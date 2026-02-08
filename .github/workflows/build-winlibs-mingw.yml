@@ -1,4 +1,4 @@
-name: Build for Windows 98 (Legacy MinGW)
+name: Build for Windows 98 (WinLibs MinGW)
 on:
   workflow_dispatch:
 
