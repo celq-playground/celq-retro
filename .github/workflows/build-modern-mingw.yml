@@ -1,4 +1,4 @@
-name: Build for Windows (MinGW)
+name: Build for Windows (Modern MinGW)
 on:
   workflow_dispatch:
 jobs:
@@ -14,9 +14,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mingw-w64 genisoimage
       
-      - name: Compile for Windows (98 compatible)
+      - name: Compile for Windows (XP compatible)
         run: |
-          # Target Windows 98 / NT 4.0 and later
+          # Target Windows 98 / NT 4.0, but beware it only works for XP SP3 probably
           i686-w64-mingw32-gcc \
             -o celq.exe \
             -O2 \
@@ -42,7 +42,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: celq-mingw-win98
+          name: celq-mingw-modern
           path: |
             celq.exe
             celq.iso
