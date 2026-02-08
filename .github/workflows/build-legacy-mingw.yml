@@ -1,4 +1,4 @@
-name: Build for Windows 98 (Legacy MinGW )
+name: Build for Windows 98 (Legacy MinGW)
 on:
   workflow_dispatch:
 
@@ -6,39 +6,46 @@ jobs:
   build-windows:
     runs-on: ubuntu-latest
     
-    env:
-      CONTAINERD_ENABLE_DEPRECATED_PULL_SCHEMA_1_IMAGE: 1
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build in Debian Squeeze Docker Container
+      - name: Build Debian Squeeze Docker Image from Scratch
         run: |
-          # Create Dockerfile for Debian Squeeze
+          # Create a Dockerfile that builds Debian Squeeze from scratch
           cat > Dockerfile << 'EOF'
-          FROM debian:squeeze
+          FROM debian:bullseye
           
-          # Update sources.list to point to archive
-          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /etc/apt/sources.list && \
-              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /etc/apt/sources.list
+          # Install debootstrap to create Debian Squeeze rootfs
+          RUN apt-get update && apt-get install -y debootstrap
           
-          # Disable release file checks for archived repos
-          RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+          # Create Debian Squeeze rootfs
+          RUN debootstrap --arch=amd64 --variant=minbase squeeze /squeeze http://archive.debian.org/debian/
           
-          # Install MinGW cross-compiler (GCC 4.4 era - perfect for Win98)
-          RUN apt-get update && \
-              apt-get install -y --force-yes mingw32 build-essential
+          # Configure the Squeeze environment
+          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /squeeze/etc/apt/sources.list && \
+              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /squeeze/etc/apt/sources.list && \
+              echo 'Acquire::Check-Valid-Until "false";' > /squeeze/etc/apt/apt.conf.d/99no-check-valid-until
+          
+          # Install MinGW in the Squeeze chroot
+          RUN chroot /squeeze apt-get update && \
+              chroot /squeeze apt-get install -y --force-yes mingw32 build-essential
           
           WORKDIR /build
+          
+          # Set entrypoint to use chroot
+          ENTRYPOINT ["/usr/sbin/chroot", "/squeeze"]
+          CMD ["/bin/bash"]
           EOF
           
           # Build the Docker image
           docker build -t debian-squeeze-mingw .
-          
-          # Run compilation inside the container
+      
+      - name: Compile in Debian Squeeze Environment
+        run: |
           docker run --rm \
             -v ${{ github.workspace }}:/build \
+            -w /build \
             debian-squeeze-mingw \
             /bin/bash -c "
               i586-mingw32msvc-gcc \
