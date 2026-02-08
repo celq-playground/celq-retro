@@ -24,19 +24,23 @@ jobs:
       - name: Compile for Windows 98
         run: |
           gcc.exe \
-            -o celq.exe \
-            -O2 \
-            -I./vendor \
-            -DHAS_UNISTD=0 \
-            -DHAS_TIMESPEC=1 \
-            -D_WIN32_WINNT=0x0400 \
-            -DWINVER=0x0400 \
-            -DWASI_FALLBACK_TIMERS_ENABLED=1 \
-            -static \
-            -static-libgcc \
-            -s \
-            main.c celq.c vendor/wasi.c \
-            -lkernel32 -luser32
+          -o celq.exe \
+          -O2 \
+          -I./vendor \
+          -DHAS_UNISTD=0 \
+          -DHAS_TIMESPEC=1 \
+          -D_WIN32_WINNT=0x0410 \
+          -DWINVER=0x0410 \
+          -DWASI_FALLBACK_TIMERS_ENABLED=1 \
+          -static \
+          -static-libgcc \
+          -march=i686 \
+          -Wl,--subsystem,console:4.0 \
+          -Wl,--file-alignment,512 \
+          -Wl,--section-alignment,4096 \
+          -s \
+          main.c celq.c vendor/wasi.c \
+          -lkernel32 -luser32
         shell: bash
       
       - name: Upload Windows Binary
