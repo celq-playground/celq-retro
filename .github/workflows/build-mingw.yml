@@ -26,7 +26,6 @@ jobs:
             -D_WIN32_WINNT=0x0400 \
             -DWINVER=0x0400 \
             -DWASI_FALLBACK_TIMERS_ENABLED=1 \
-            -mcrtdll=msvcrt \
             -static \
             -static-libgcc \
             -s \
