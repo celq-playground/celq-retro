@@ -18,9 +18,9 @@ jobs:
           RUN apt-get update && apt-get install -y debootstrap wget
           
           # Create Debian Woody (3.0) rootfs
-          # Woody is from 2002 and requires special handling
+          # Woody is from 2002 - no fancy variants, just basic debootstrap
           RUN mkdir -p /woody
-          RUN debootstrap --arch=i386 --no-check-gpg --variant=minbase woody /woody http://archive.debian.org/debian/
+          RUN debootstrap --arch=i386 --no-check-gpg woody /woody http://archive.debian.org/debian/
           
           # Configure Woody APT sources
           RUN echo "deb http://archive.debian.org/debian/ woody main contrib non-free" > /woody/etc/apt/sources.list
