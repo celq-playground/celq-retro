@@ -13,11 +13,11 @@ jobs:
     steps:
       - name: Download Windows 98 binary
         run: |
-          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-win98.zip
+          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-open-watcom.zip
           
       - name: Extract celq.exe
         run: |
-          unzip celq-win98.zip
+          unzip celq-open-watcom.zip
           chmod +x celq.exe
           
       - name: Verify binary
@@ -60,11 +60,11 @@ jobs:
           
       - name: Download Windows 98 binary
         run: |
-          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-win98.zip
+          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-open-watcom.zip
           
       - name: Extract celq.exe
         run: |
-          unzip celq-win98.zip
+          unzip celq-open-watcom.zip
           chmod +x celq.exe
           
       - name: Test celq.exe -n '1>0' via Wine
@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Download MinGW binary
         run: |
-          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-modern-mingw.zip
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-legacy-mingw.zip
           
       - name: Extract celq.exe
         run: |
@@ -136,7 +136,7 @@ jobs:
           
       - name: Download MinGW binary
         run: |
-          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-modern-mingw.zip
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-legacy-mingw.zip
           
       - name: Extract celq.exe
         run: |
