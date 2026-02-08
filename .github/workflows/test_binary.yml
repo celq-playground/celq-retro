@@ -17,7 +17,7 @@ jobs:
           
       - name: Extract celq.exe
         run: |
-          unzip celq-open-watcom.zip
+          unzip celq-win98.zip
           chmod +x celq.exe
           
       - name: Verify binary
@@ -64,7 +64,7 @@ jobs:
           
       - name: Extract celq.exe
         run: |
-          unzip celq-open-watcom.zip
+          unzip celq-win98.zip
           chmod +x celq.exe
           
       - name: Test celq.exe -n '1>0' via Wine
