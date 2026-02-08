@@ -3,50 +3,55 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build-windows-legacy:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build Debian Squeeze Docker Image from Scratch
+      - name: Build Debian Lenny Docker Image from Scratch
         run: |
-          # Create a Dockerfile that builds Debian Squeeze from scratch
+          # Create a Dockerfile that builds Debian Lenny (5.0) from scratch
           cat > Dockerfile << 'EOF'
           FROM debian:bullseye
           
-          # Install debootstrap to create Debian Squeeze rootfs
+          # Install debootstrap
           RUN apt-get update && apt-get install -y debootstrap
           
-          # Create Debian Squeeze rootfs
-          RUN debootstrap --arch=amd64 --variant=minbase squeeze /squeeze http://archive.debian.org/debian/
+          # Create Debian Lenny rootfs
+          # We use --no-check-gpg because the release keys are long expired
+          RUN debootstrap --arch=amd64 --no-check-gpg --variant=minbase lenny /lenny http://archive.debian.org/debian/
           
-          # Configure the Squeeze environment
-          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /squeeze/etc/apt/sources.list && \
-              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /squeeze/etc/apt/sources.list && \
-              echo 'Acquire::Check-Valid-Until "false";' > /squeeze/etc/apt/apt.conf.d/99no-check-valid-until
+          # Configure the Lenny environment
+          # Note: We must point to archive.debian.org
+          RUN echo "deb http://archive.debian.org/debian/ lenny main contrib non-free" > /lenny/etc/apt/sources.list && \
+              echo 'Acquire::Check-Valid-Until "false";' > /lenny/etc/apt/apt.conf.d/99no-check-valid-until
           
-          # Install MinGW in the Squeeze chroot
-          RUN chroot /squeeze apt-get update && \
-              chroot /squeeze apt-get install -y --force-yes mingw32 build-essential
+          # Install MinGW in the Lenny chroot
+          # Lenny uses --force-yes instead of modern --allow-unauthenticated flags
+          RUN chroot /lenny apt-get update && \
+              chroot /lenny apt-get install -y --force-yes mingw32 build-essential
           
-          # Create build directory inside chroot
-          RUN mkdir -p /squeeze/build
-          
-          WORKDIR /squeeze/build
+          # Create build directory
+          RUN mkdir -p /lenny/build
+          WORKDIR /lenny/build
           EOF
           
           # Build the Docker image
-          docker build -t debian-squeeze-mingw .
+          docker build -t debian-lenny-mingw .
       
-      - name: Compile in Debian Squeeze Environment
+      - name: Compile in Debian Lenny Environment
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/squeeze/build \
-            debian-squeeze-mingw \
-            /usr/sbin/chroot /squeeze /bin/bash -c "
+            -v ${{ github.workspace }}:/lenny/build \
+            debian-lenny-mingw \
+            /usr/sbin/chroot /lenny /bin/bash -c "
               cd /build
+              
+              # Check compiler version for verification in logs
+              i586-mingw32msvc-gcc --version
+              
               i586-mingw32msvc-gcc \
                 -o celq.exe \
                 -O2 \
@@ -58,7 +63,7 @@ jobs:
                 -DWASI_FALLBACK_TIMERS_ENABLED=1 \
                 -static \
                 -static-libgcc \
-                -march=i686 \
+                -march=i586 \
                 -Wl,--subsystem,console:4.0 \
                 -Wl,--file-alignment,512 \
                 -Wl,--section-alignment,4096 \
@@ -70,26 +75,20 @@ jobs:
               ls -lh celq.exe
             "
       
-      - name: Verify Binary
-        run: |
-          ls -lh celq.exe
-          file celq.exe
-      
       - name: Upload Windows Binary
         uses: actions/upload-artifact@v4
         with:
-          name: celq-mingw-legacy
+          name: celq-win98-legacy
           path: celq.exe
 
   create-iso:
     runs-on: ubuntu-latest
-    needs: build-windows
-    
+    needs: build-windows-legacy
     steps:
       - name: Download Windows Binary
         uses: actions/download-artifact@v4
         with:
-          name: celq-mingw-legacy
+          name: celq-win98-legacy
       
       - name: Install genisoimage
         run: |
@@ -101,7 +100,7 @@ jobs:
           mkdir -p iso_contents
           cp celq.exe iso_contents/
           echo "Copy celq.exe to your Windows 98/XP machine and run it" > iso_contents/README.txt
-          genisoimage -o celq.iso -V "CELQ" -r -J iso_contents
+          genisoimage -o celq.iso -V "CELQ_LEGACY" -r -J iso_contents
       
       - name: Upload ISO Artifact
         uses: actions/upload-artifact@v4
