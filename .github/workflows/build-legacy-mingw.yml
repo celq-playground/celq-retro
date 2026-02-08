@@ -52,7 +52,7 @@ jobs:
                 -O2 \
                 -I./vendor \
                 -DHAS_UNISTD=0 \
-                -DHAS_TIMESPEC=1 \
+                -DHAS_TIMESPEC=0 \
                 -D_WIN32_WINNT=0x0410 \
                 -DWINVER=0x0410 \
                 -DWASI_FALLBACK_TIMERS_ENABLED=1 \
