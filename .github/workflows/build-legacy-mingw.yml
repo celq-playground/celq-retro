@@ -1,0 +1,101 @@
+name: Build for Windows 98 (Legacy MinGW)
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build in Debian Squeeze Docker Container
+        run: |
+          # Create Dockerfile for Debian Squeeze
+          cat > Dockerfile << 'EOF'
+          FROM debian:squeeze
+          
+          # Update sources.list to point to archive
+          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /etc/apt/sources.list && \
+              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /etc/apt/sources.list
+          
+          # Disable release file checks for archived repos
+          RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+          
+          # Install MinGW cross-compiler
+          RUN apt-get update && \
+              apt-get install -y mingw32 build-essential
+          
+          WORKDIR /build
+          EOF
+          
+          # Build the Docker image
+          docker build -t debian-squeeze-mingw .
+          
+          # Run compilation inside the container
+          docker run --rm \
+            -v ${{ github.workspace }}:/build \
+            debian-squeeze-mingw \
+            /bin/bash -c "
+              i586-mingw32msvc-gcc \
+                -o celq.exe \
+                -O2 \
+                -I./vendor \
+                -DHAS_UNISTD=0 \
+                -DHAS_TIMESPEC=1 \
+                -D_WIN32_WINNT=0x0410 \
+                -DWINVER=0x0410 \
+                -DWASI_FALLBACK_TIMERS_ENABLED=1 \
+                -static \
+                -static-libgcc \
+                -march=i686 \
+                -Wl,--subsystem,console:4.0 \
+                -Wl,--file-alignment,512 \
+                -Wl,--section-alignment,4096 \
+                -s \
+                main.c celq.c vendor/wasi.c \
+                -lkernel32 -luser32
+              
+              echo 'Compilation complete!'
+              ls -lh celq.exe
+            "
+      
+      - name: Verify Binary
+        run: |
+          ls -lh celq.exe
+          file celq.exe
+      
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-mingw-legacy
+          path: celq.exe
+
+  create-iso:
+    runs-on: ubuntu-latest
+    needs: build-windows
+    
+    steps:
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: celq-mingw-legacy
+      
+      - name: Install genisoimage
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y genisoimage
+      
+      - name: Create ISO
+        run: |
+          mkdir -p iso_contents
+          cp celq.exe iso_contents/
+          echo "Copy celq.exe to your Windows 98/XP machine and run it" > iso_contents/README.txt
+          genisoimage -o celq.iso -V "CELQ" -r -J iso_contents
+      
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-iso
+          path: celq.iso
