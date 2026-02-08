@@ -1,4 +1,4 @@
-name: Build for Windows (Legacy MinGW)
+name: Build for Windows 98 (Legacy MinGW)
 on:
   workflow_dispatch:
 
@@ -10,32 +10,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Install Legacy MinGW via Chocolatey
-        run: |
-          choco install mingw --version=5.3.0 -y
-        shell: powershell
+      - name: Install Legacy MinGW (GCC 8.5.0, 32-bit)
+        uses: bwoodsend/setup-winlibs-action@v1
+        with:
+          tag: '8.5.0-9.0.0-msvcrt-r1'
+          architecture: i686
+          add_to_path: true
+      
+      - name: Verify MinGW Installation
+        run: gcc --version
+        shell: bash
       
       - name: Compile for Windows 98
         run: |
-          # Refresh PATH to include MinGW
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          
-          # Target Windows 98 / NT 4.0 with legacy MinGW
-          gcc.exe `
-            -o celq.exe `
-            -O2 `
-            -I./vendor `
-            -DHAS_UNISTD=0 `
-            -DHAS_TIMESPEC=1 `
-            -D_WIN32_WINNT=0x0400 `
-            -DWINVER=0x0400 `
-            -DWASI_FALLBACK_TIMERS_ENABLED=1 `
-            -static `
-            -static-libgcc `
-            -s `
-            main.c celq.c vendor/wasi.c `
+          gcc.exe \
+            -o celq.exe \
+            -O2 \
+            -I./vendor \
+            -DHAS_UNISTD=0 \
+            -DHAS_TIMESPEC=1 \
+            -D_WIN32_WINNT=0x0400 \
+            -DWINVER=0x0400 \
+            -DWASI_FALLBACK_TIMERS_ENABLED=1 \
+            -static \
+            -static-libgcc \
+            -s \
+            main.c celq.c vendor/wasi.c \
             -lkernel32 -luser32
-        shell: powershell
+        shell: bash
       
       - name: Upload Windows Binary
         uses: actions/upload-artifact@v4
