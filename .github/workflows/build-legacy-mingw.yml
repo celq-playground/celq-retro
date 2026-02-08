@@ -1,0 +1,72 @@
+name: Build for Windows (Legacy MinGW)
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Legacy MinGW via Chocolatey
+        run: |
+          choco install mingw --version=5.3.0 -y
+        shell: powershell
+      
+      - name: Compile for Windows 98
+        run: |
+          # Refresh PATH to include MinGW
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          
+          # Target Windows 98 / NT 4.0 with legacy MinGW
+          gcc.exe `
+            -o celq.exe `
+            -O2 `
+            -I./vendor `
+            -DHAS_UNISTD=0 `
+            -DHAS_TIMESPEC=1 `
+            -D_WIN32_WINNT=0x0400 `
+            -DWINVER=0x0400 `
+            -DWASI_FALLBACK_TIMERS_ENABLED=1 `
+            -static `
+            -static-libgcc `
+            -s `
+            main.c celq.c vendor/wasi.c `
+            -lkernel32 -luser32
+        shell: powershell
+      
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-mingw-legacy
+          path: celq.exe
+
+  create-iso:
+    runs-on: ubuntu-latest
+    needs: build-windows
+    
+    steps:
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: celq-mingw-legacy
+      
+      - name: Install genisoimage
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y genisoimage
+      
+      - name: Create ISO
+        run: |
+          mkdir -p iso_contents
+          cp celq.exe iso_contents/
+          echo "Copy celq.exe to your Windows 98/XP machine and run it" > iso_contents/README.txt
+          genisoimage -o celq.iso -V "CELQ" -r -J iso_contents
+      
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-iso
+          path: celq.iso
