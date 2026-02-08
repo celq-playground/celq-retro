@@ -89,7 +89,7 @@ jobs:
     steps:
       - name: Download MinGW binary
         run: |
-          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-mingw.zip
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-modern-mingw.zip
           
       - name: Extract celq.exe
         run: |
@@ -136,7 +136,7 @@ jobs:
           
       - name: Download MinGW binary
         run: |
-          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-mingw.zip
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-modern-mingw.zip
           
       - name: Extract celq.exe
         run: |
