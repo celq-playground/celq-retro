@@ -1,4 +1,4 @@
-name: Build for Windows 98 (Legacy MinGW)
+name: Build for Windows 98 (Legacy MinGW )
 on:
   workflow_dispatch:
 
@@ -6,39 +6,42 @@ jobs:
   build-windows:
     runs-on: ubuntu-latest
     
+    env:
+      CONTAINERD_ENABLE_DEPRECATED_PULL_SCHEMA_1_IMAGE: 1
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build in Debian Jessie Docker Container
+      - name: Build in Debian Squeeze Docker Container
         run: |
-          # Create Dockerfile for Debian Jessie
+          # Create Dockerfile for Debian Squeeze
           cat > Dockerfile << 'EOF'
-          FROM debian:jessie
+          FROM debian:squeeze
           
           # Update sources.list to point to archive
-          RUN echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" > /etc/apt/sources.list && \
-              echo "deb http://archive.debian.org/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
+          RUN echo "deb http://archive.debian.org/debian/ squeeze main contrib non-free" > /etc/apt/sources.list && \
+              echo "deb http://archive.debian.org/debian-security/ squeeze/updates main contrib non-free" >> /etc/apt/sources.list
           
           # Disable release file checks for archived repos
           RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
           
-          # Install MinGW cross-compiler (GCC 4.9 era)
+          # Install MinGW cross-compiler (GCC 4.4 era - perfect for Win98)
           RUN apt-get update && \
-              apt-get install -y --force-yes gcc-mingw-w64-i686 g++-mingw-w64-i686 build-essential
+              apt-get install -y --force-yes mingw32 build-essential
           
           WORKDIR /build
           EOF
           
           # Build the Docker image
-          docker build -t debian-jessie-mingw .
+          docker build -t debian-squeeze-mingw .
           
           # Run compilation inside the container
           docker run --rm \
             -v ${{ github.workspace }}:/build \
-            debian-jessie-mingw \
+            debian-squeeze-mingw \
             /bin/bash -c "
-              i686-w64-mingw32-gcc \
+              i586-mingw32msvc-gcc \
                 -o celq.exe \
                 -O2 \
                 -I./vendor \
