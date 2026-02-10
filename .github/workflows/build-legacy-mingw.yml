@@ -1,4 +1,4 @@
-name: Build for Windows 98 (Legacy MinGW)
+name: Build for Windows 98 (Using Published MinGW Image)
 on:
   workflow_dispatch:
 
@@ -10,46 +10,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build Debian Etch Docker Image
-        run: |
-          # We use bullseye (Debian 11) because it is old enough to handle legacy bootstrapping tasks well.
-          cat > Dockerfile << 'EOF'
-          FROM debian:bullseye-slim
-          
-          # Install debootstrap
-          RUN apt-get update && apt-get install -y debootstrap
-          
-          # Create Debian Etch (4.0) rootfs
-          # 1. We verify against nothing (--no-check-gpg) because Etch keys are long expired
-          # 2. We use archive.debian.org because Etch is ancient
-          RUN mkdir -p /etch
-          RUN debootstrap --arch=i386 --no-check-gpg --variant=minbase etch /etch http://archive.debian.org/debian/
-          
-          # Configure Etch APT to point to the archive
-          RUN echo "deb http://archive.debian.org/debian/ etch main contrib non-free" > /etch/etc/apt/sources.list
-          
-          # Force Apt to ignore expiry timestamps (Etch Release file is from 2007)
-          RUN echo 'Acquire::Check-Valid-Until "false";' > /etch/etc/apt/apt.conf.d/99no-check-valid-until
-          
-          # Install MinGW in the Etch chroot
-          # We set DEBIAN_FRONTEND=noninteractive to avoid curses errors
-          # We use --force-yes because Etch apt doesn't have modern --allow-unauthenticated flags
-          RUN chroot /etch apt-get update || true
-          RUN chroot /etch bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes mingw32 build-essential"
-          
-          # Create build dir
-          RUN mkdir -p /etch/build
-          WORKDIR /etch/build
-          EOF
-          
-          docker build -t debian-etch-mingw .
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Compile with MinGW GCC 3.4.5
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/etch/build \
-            debian-etch-mingw \
-            /usr/sbin/chroot /etch /bin/bash -c "
+            ghcr.io/celq-playground/celq-retro/debian-etch-mingw:latest \
+            /bin/bash -c "
               cd /build
               
               echo 'Checking Compiler Version (Target: 3.4.5):'
@@ -85,7 +58,7 @@ jobs:
         with:
           name: celq-win98-etch
           path: celq.exe
-
+          
   create-iso:
     runs-on: ubuntu-latest
     needs: build-win98-etch
