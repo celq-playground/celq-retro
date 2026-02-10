@@ -1,0 +1,95 @@
+name: Build for Windows 98 (Oldest MinGW)
+on:
+  workflow_dispatch:
+
+jobs:
+  build-win98-woody:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Compile with Woody MinGW
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/woody/build \
+            ghcr.io/celq-playground/celq-retro/debian-woody-mingw:latest \
+            /bin/bash -c "
+              cd /build
+              
+              echo '=== Checking Compiler Version ==='
+              i386-mingw32msvc-gcc -v 2>&1 || i586-mingw32msvc-gcc -v 2>&1 || mingw32-gcc -v 2>&1
+              
+              echo '=== Starting Build ==='
+              
+              # Try different compiler prefixes (Woody used different naming)
+              COMPILER=\$(command -v i386-mingw32msvc-gcc || command -v i586-mingw32msvc-gcc || command -v mingw32-gcc)
+              
+              echo \"Using compiler: \$COMPILER\"
+              
+              \$COMPILER \
+                -o celq.exe \
+                -O2 \
+                -I./vendor \
+                -DHAS_UNISTD=0 \
+                -DHAS_TIMESPEC=0 \
+                -D_WIN32_WINNT=0x0410 \
+                -DWINVER=0x0410 \
+                -DWASI_FALLBACK_TIMERS_ENABLED=1 \
+                -static \
+                -march=i386 \
+                -Wl,--subsystem,console:4.0 \
+                -Wl,--file-alignment,512 \
+                -Wl,--section-alignment,4096 \
+                -s \
+                main.c celq.c vendor/wasi.c \
+                -lkernel32 -luser32 -ladvapi32
+              
+              echo '=== Build Complete ==='
+              ls -lh celq.exe
+              file celq.exe
+            "
+            
+      - name: Upload Windows Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-win98-woody
+          path: celq.exe
+          
+  create-iso:
+    runs-on: ubuntu-latest
+    needs: build-win98-woody
+    
+    steps:
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: celq-win98-woody
+      
+      - name: Install genisoimage
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y genisoimage
+      
+      - name: Create ISO
+        run: |
+          mkdir -p iso_contents
+          cp celq.exe iso_contents/
+          echo "CELQ - Built with Debian Woody MinGW (circa 2002)" > iso_contents/README.txt
+          echo "Compatible with Windows 98/ME/2000/XP" >> iso_contents/README.txt
+          
+          genisoimage -o celq.iso -V "CELQ_WOODY" -r -J iso_contents
+      
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-iso-woody
+          path: celq.iso
