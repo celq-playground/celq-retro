@@ -83,6 +83,10 @@ struct timespec {
 #include <io.h>
 #include <direct.h>
 
+#if !(defined(_MSC_VER) && _MSC_VER <= 1000)
+#include <wincrypt.h>
+#endif
+
 #define mode_t unsigned short
 
 #ifndef S_IFMT
@@ -4072,7 +4076,6 @@ wasiRandomGet(
     bufferStart = memory->data + bufferPointer;
 
 #if defined(_WIN32) && !(defined(_MSC_VER) && _MSC_VER <= 1000)
-#include <wincrypt.h>
     {
         HCRYPTPROV provider;
         bool success;
