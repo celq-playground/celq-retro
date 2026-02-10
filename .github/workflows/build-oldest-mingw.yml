@@ -46,6 +46,7 @@ jobs:
                 -DCRYPT_SILENT=0x00000040 \
                 -D_WIN32_WINNT=0x0410 \
                 -DWINVER=0x0410 \
+                -DNEEDS_TRUNC_FALLBACK \
                 -DWASI_FALLBACK_TIMERS_ENABLED=1 \
                 -static \
                 -march=i386 \
