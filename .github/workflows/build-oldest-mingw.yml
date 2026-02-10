@@ -43,6 +43,7 @@ jobs:
                 -DHAS_TIMESPEC=0 \
                 -DHAS_SYSUIO=0 \
                 -Dssize_t=int \
+                -DCRYPT_SILENT=0x00000040 \
                 -D_WIN32_WINNT=0x0410 \
                 -DWINVER=0x0410 \
                 -DWASI_FALLBACK_TIMERS_ENABLED=1 \
