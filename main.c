@@ -24,6 +24,13 @@ char** environ = NULL;
 extern char** environ;
 #endif
 
+#ifdef NEEDS_TRUNC_FALLBACK
+#include <math.h>
+double trunc(double x) {
+    return (x >= 0.0) ? floor(x) : ceil(x);
+}
+#endif
+
 /* Main */
 
 int main(int argc, char* argv[]) {
