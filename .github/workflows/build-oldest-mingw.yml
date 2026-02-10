@@ -41,6 +41,8 @@ jobs:
                 -I./vendor \
                 -DHAS_UNISTD=0 \
                 -DHAS_TIMESPEC=0 \
+                -DHAS_SYSUIO=0 \
+                -Dssize_t=int \
                 -D_WIN32_WINNT=0x0410 \
                 -DWINVER=0x0410 \
                 -DWASI_FALLBACK_TIMERS_ENABLED=1 \
