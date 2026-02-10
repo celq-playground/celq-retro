@@ -1,0 +1,73 @@
+name: Build and Publish Debian Woody MinGW Image
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/debian-woody-mingw
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile << 'EOF'
+          FROM debian:bullseye-slim
+          
+          # Install debootstrap and required tools
+          RUN apt-get update && apt-get install -y debootstrap wget
+          
+          # Create Debian Woody (3.0) rootfs
+          # Woody is from 2002 - no fancy variants, just basic debootstrap
+          RUN mkdir -p /woody
+          RUN debootstrap --arch=i386 --no-check-gpg woody /woody http://archive.debian.org/debian/
+          
+          # Configure Woody APT sources
+          RUN echo "deb http://archive.debian.org/debian/ woody main contrib non-free" > /woody/etc/apt/sources.list
+          
+          # Disable validity checks for ancient Release files
+          RUN echo 'Acquire::Check-Valid-Until "false";' > /woody/etc/apt/apt.conf.d/99no-check-valid-until
+          
+          # Install MinGW in the Woody chroot
+          # Note: Woody's MinGW is extremely old (circa 2001-2002)
+          RUN chroot /woody apt-get update || true
+          RUN chroot /woody bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes mingw32 gcc make"
+          
+          # Create build directory
+          RUN mkdir -p /woody/build
+          WORKDIR /woody/build
+          
+          # Set default entrypoint to chroot into Woody
+          ENTRYPOINT ["/usr/sbin/chroot", "/woody"]
+          CMD ["/bin/bash"]
+          EOF
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
