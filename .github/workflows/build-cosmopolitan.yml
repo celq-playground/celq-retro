@@ -1,0 +1,38 @@
+name: Build with Cosmopolitan
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Cosmopolitan toolchain
+        run: |
+          # Download and extract cosmocc
+          wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
+          unzip cosmocc.zip
+          chmod +x bin/*
+      
+      - name: Compile with cosmocc
+        run: |
+          export PATH="$PWD/bin:$PATH"
+          
+          cosmocc \
+            -o celq \
+            -Os \
+            -std=gnu90 \
+            -I./vendor \
+            -DHAS_UNISTD=1 \
+            -DHAS_TIMESPEC=1 \
+            -DHAS_SYSUIO=1 \
+            main.c celq.c vendor/wasi.c \
+            -lm
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-cosmopolitan
+          path: celq
