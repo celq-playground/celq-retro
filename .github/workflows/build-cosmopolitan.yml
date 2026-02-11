@@ -11,16 +11,13 @@ jobs:
       
       - name: Install Cosmopolitan toolchain
         run: |
-          # Download and extract cosmocc
-          wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
-          unzip cosmocc.zip
+          wget -O cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc.zip
+          unzip -q cosmocc.zip
           chmod +x bin/*
       
       - name: Compile with cosmocc
         run: |
-          export PATH="$PWD/bin:$PATH"
-          
-          cosmocc \
+          ./bin/cosmocc \
             -o celq \
             -Os \
             -std=gnu90 \
