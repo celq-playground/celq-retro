@@ -32,6 +32,12 @@ wcl386 -l=nt -os -i=./vendor \
 	main.c celq.c vendor/wasi.c vendor/win32.c -fe=celq.exe
 ```
 
+## Does it work?
+
+Yes!
+
+![](.github/celq_win98.png)
+
 ## How was this made
 
 First, clone [celq](https://github.com/IvanIsCoding/celq) and build `celq.wasm` with:
