@@ -11,13 +11,15 @@ jobs:
       
       - name: Install Cosmopolitan toolchain
         run: |
+          mkdir cosmocc
+          cd cosmocc
           wget -O cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc.zip
           unzip -q cosmocc.zip
           chmod +x bin/*
       
       - name: Compile with cosmocc
         run: |
-          ./bin/cosmocc \
+          ./cosmocc/bin/cosmocc \
             -o celq \
             -Os \
             -std=gnu90 \
