@@ -1,37 +1,289 @@
-name: Build with Cosmopolitan
+name: Test Windows 98 Binary Compatibility
+
 on:
   workflow_dispatch:
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
+  test-win98-binary-windows:
+    name: Test Windows 98 Binary on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout code
+      - name: Download Windows 98 binary
+        run: |
+          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-open-watcom.zip
+          
+      - name: Extract celq.exe
+        run: |
+          unzip celq-win98.zip
+          chmod +x celq.exe
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq.exe
+          file celq.exe || echo "file command not available"
+          
+      - name: Checkout smoke test repository
         uses: actions/checkout@v4
-      
-      - name: Install Cosmopolitan toolchain
-        run: |
-          mkdir cosmocc
-          cd cosmocc
-          wget -O cosmocc.zip https://cosmo.zip/pub/cosmocc/cosmocc.zip
-          unzip -q cosmocc.zip
-          chmod +x bin/*
-      
-      - name: Compile with cosmocc
-        run: |
-          ./cosmocc/bin/cosmocc \
-            -o celq \
-            -Os \
-            -std=gnu90 \
-            -I./vendor \
-            -DHAS_UNISTD=1 \
-            -DHAS_TIMESPEC=1 \
-            -DHAS_SYSUIO=1 \
-            main.c celq.c vendor/wasi.c \
-            -lm
-      
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
         with:
-          name: celq-cosmopolitan
-          path: celq
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq.exe test-bin/celq.exe
+          
+          # Run the smoke test script with the Win98 binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq.exe
+
+  test-win98-binary-wine:
+    name: Test Windows 98 Binary via Wine on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo mkdir -pm755 /etc/apt/keyrings
+          sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+          sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/$(lsb_release -sc)/winehq-$(lsb_release -sc).sources
+          sudo apt update
+          sudo apt install -y --install-recommends winehq-stable
+          
+      - name: Verify Wine installation
+        run: |
+          wine --version
+          wineboot --init
+          
+      - name: Download Windows 98 binary
+        run: |
+          curl -L -o celq-win98.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-open-watcom.zip
+          
+      - name: Extract celq.exe
+        run: |
+          unzip celq-win98.zip
+          chmod +x celq.exe
+          
+      - name: Test celq.exe -n '1>0' via Wine
+        run: |
+          echo "Running: wine celq.exe -n '1>0'"
+          WINEDEBUG=-all wine celq.exe -n '1>0' 2>/dev/null
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ Test passed"
+          else
+            echo "✗ Test failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+  test-mingw-binary-windows:
+    name: Test MinGW Binary on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download MinGW binary
+        run: |
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-legacy-mingw.zip
+          
+      - name: Extract celq.exe
+        run: |
+          unzip celq-mingw.zip
+          chmod +x celq.exe
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq.exe
+          file celq.exe || echo "file command not available"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq.exe test-bin/celq.exe
+          
+          # Run the smoke test script with the MinGW binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq.exe
+
+  test-mingw-binary-wine:
+    name: Test MinGW Binary via Wine on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo mkdir -pm755 /etc/apt/keyrings
+          sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+          sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/$(lsb_release -sc)/winehq-$(lsb_release -sc).sources
+          sudo apt update
+          sudo apt install -y --install-recommends winehq-stable
+          
+      - name: Verify Wine installation
+        run: |
+          wine --version
+          wineboot --init
+          
+      - name: Download MinGW binary
+        run: |
+          curl -L -o celq-mingw.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-legacy-mingw.zip
+          
+      - name: Extract celq.exe
+        run: |
+          unzip celq-mingw.zip
+          chmod +x celq.exe
+          
+      - name: Test celq.exe -n '1>0' via Wine
+        run: |
+          echo "Running: wine celq.exe -n '1>0'"
+          WINEDEBUG=-all wine celq.exe -n '1>0' 2>/dev/null
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ Test passed"
+          else
+            echo "✗ Test failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+  test-ape-binary-linux:
+    name: Test APE Binary on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq test-bin/celq
+          
+          # Run the smoke test script with the APE binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-macos:
+    name: Test APE Binary on macOS
+    runs-on: macos-latest
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq test-bin/celq
+          
+          # Run the smoke test script with the APE binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-freebsd:
+    name: Test APE Binary on FreeBSD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Test in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          run: |
+            # Download APE binary
+            fetch -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+            
+            # Extract celq
+            unzip celq-ape.zip
+            chmod +x celq
+            
+            # Verify binary
+            ls -lh celq
+            file celq || echo "file command not available"
+            
+            # Move the binary to a consistent location
+            mkdir -p test-bin
+            mv celq test-bin/celq
+            
+            # Run the smoke test script with the APE binary
+            sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-windows:
+    name: Test APE Binary on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Test celq -n '1>0'
+        run: |
+          echo "Running: ./celq -n '1>0'"
+          ./celq -n '1>0'
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ Test passed"
+          else
+            echo "✗ Test failed with exit code $EXIT_CODE"
+            exit 1
+          fi
