@@ -189,12 +189,9 @@ jobs:
           # Run the smoke test script with the APE binary
           sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
 
-  test-ape-binary-windows:
-    name: Test APE Binary on Windows
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
+  test-ape-binary-macos:
+    name: Test APE Binary on macOS
+    runs-on: macos-latest
     steps:
       - name: Download APE binary
         run: |
@@ -224,3 +221,69 @@ jobs:
           
           # Run the smoke test script with the APE binary
           sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-freebsd:
+    name: Test APE Binary on FreeBSD
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Test in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          run: |
+            # Download APE binary
+            fetch -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+            
+            # Extract celq
+            unzip celq-ape.zip
+            chmod +x celq
+            
+            # Verify binary
+            ls -lh celq
+            file celq || echo "file command not available"
+            
+            # Move the binary to a consistent location
+            mkdir -p test-bin
+            mv celq test-bin/celq
+            
+            # Run the smoke test script with the APE binary
+            sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-windows:
+    name: Test APE Binary on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Test celq -n '1>0'
+        run: |
+          echo "Running: ./celq -n '1>0'"
+          ./celq -n '1>0'
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✓ Test passed"
+          else
+            echo "✗ Test failed with exit code $EXIT_CODE"
+            exit 1
+          fi
