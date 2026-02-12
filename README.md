@@ -36,7 +36,7 @@ wcl386 -l=nt -os -i=./vendor \
 
 Yes!
 
-![](.github/celq_win98.png)
+![](.github/img/celq_win98.png)
 
 ## How was this made
 
