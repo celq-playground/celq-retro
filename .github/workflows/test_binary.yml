@@ -155,3 +155,72 @@ jobs:
             echo "✗ Test failed with exit code $EXIT_CODE"
             exit 1
           fi
+
+  test-ape-binary-linux:
+    name: Test APE Binary on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq test-bin/celq
+          
+          # Run the smoke test script with the APE binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
+
+  test-ape-binary-windows:
+    name: Test APE Binary on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download APE binary
+        run: |
+          curl -L -o celq-ape.zip https://github.com/celq-playground/celq-retro/releases/download/v0.3.3-1/celq-cosmopolitan.zip
+          
+      - name: Extract celq
+        run: |
+          unzip celq-ape.zip
+          chmod +x celq
+          
+      - name: Verify binary
+        run: |
+          ls -lh celq
+          file celq || echo "file command not available"
+          
+      - name: Checkout smoke test repository
+        uses: actions/checkout@v4
+        with:
+          repository: IvanIsCoding/celq
+          path: celq-tests
+          
+      - name: Run smoke test
+        run: |
+          # Move the binary to a consistent location
+          mkdir -p test-bin
+          mv celq test-bin/celq
+          
+          # Run the smoke test script with the APE binary
+          sh celq-tests/.github/scripts/smoke-test.sh ./test-bin/celq
